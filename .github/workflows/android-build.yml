@@ -37,6 +37,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Verify adapted project directory exists
+        run: |
+          if [ ! -f xstreaming-android7/android/gradlew ]; then
+            echo "ERROR: xstreaming-android7/android/gradlew not found"
+            ls -la
+            ls -la xstreaming-android7 || true
+            exit 1
+          fi
+
       - name: Setup Node.js and Corepack
         uses: actions/setup-node@v4
         with:
@@ -45,15 +54,23 @@ jobs:
       - name: Enable Corepack
         run: corepack enable
 
+      - name: Ensure Yarn node-modules linker config
+        working-directory: xstreaming-android7
+        run: |
+          if [ ! -f .yarnrc.yml ]; then
+            echo "nodeLinker: node-modules" > .yarnrc.yml
+          fi
+
       - name: Cache Yarn dependencies
         uses: actions/cache@v4
         with:
           path: |
-            .yarn/cache
-            node_modules
-          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock', 'patches/*.patch') }}
+            xstreaming-android7/.yarn/cache
+            xstreaming-android7/node_modules
+          key: yarn-${{ runner.os }}-${{ hashFiles('xstreaming-android7/yarn.lock', 'xstreaming-android7/patches/*.patch') }}
 
       - name: Install JavaScript dependencies and apply patches
+        working-directory: xstreaming-android7
         run: corepack yarn install --immutable
 
       - name: Setup Java 17
@@ -79,16 +96,19 @@ jobs:
       - name: Cache Rust cargo artifacts
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: nano-rs
+          workspaces: xstreaming-android7/nano-rs
 
       - name: Cache Gradle packages
         uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-root-directory: xstreaming-android7/android
 
       - name: Make Gradle wrapper executable
+        working-directory: xstreaming-android7
         run: chmod +x android/gradlew
 
       - name: Build Android APK
-        working-directory: android
+        working-directory: xstreaming-android7/android
         env:
           ANDROID_NDK_HOME: ${{ env.ANDROID_SDK_ROOT }}/ndk/23.1.7779620
           ORG_GRADLE_PROJECT_reactNativeArchitectures: ${{ inputs.abis || 'armeabi-v7a,arm64-v8a' }}
@@ -106,6 +126,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: XStreaming-2.12.0-android7-api24-apk
-          path: android/app/build/outputs/apk/**/*.apk
+          path: xstreaming-android7/android/app/build/outputs/apk/**/*.apk
           if-no-files-found: error
           retention-days: 30
