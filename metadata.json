@@ -1,0 +1,6 @@
+{
+  "name": "XStreaming 2.12.0 — Android 7.0 (API 24)",
+  "description": "Código fuente adaptado de XStreaming 2.12.0 para Android 7.0 Nougat (API 24) y ASUS P008 (Snapdragon 650 / Adreno 510), con descarga directa en ZIP y flujo CI.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
